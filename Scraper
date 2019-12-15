@@ -1,0 +1,402 @@
+import requests
+from bs4 import BeautifulSoup
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
+
+def Get_forecast(city_name, state_name):
+
+    loc_query = city_name + "+" + state_name + "+" + "+weather"
+
+    forecast_link = "https://www.google.com/search?q=" + loc_query
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+
+    soup = BeautifulSoup(requests.get(forecast_link, headers=headers).text, features="html.parser")
+
+        # using html to get time
+
+    forecastinfo = soup.find('span', class_='vk_gy vk_sh').text
+    return forecastinfo
+
+def Get_time(city_time, state_time):
+
+    loc_query  = city_time + "+" + state_time + "+weather"
+
+    time_link = "https://www.google.com/search?q=" + loc_query
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+
+    soup = BeautifulSoup(requests.get(time_link, headers=headers).text, features="html.parser")
+
+    timeinfo = soup.find('div', class_='vk_gy vk_sh', attrs={'id': 'wob_dts'}).text
+    return timeinfo
+
+def Get_temp(c, s):
+        # grabbing the information by replacing the google search link with the added field of city and state.
+        # used the google search stem and then replaced with the + sign to add the correct attributes
+    weatherinfo = []
+    city_state = c + " " + s + " weather"
+
+    loc_query = city_state.replace(" ", "+")
+
+    temp_link = "https://www.google.com/search?q=" + loc_query
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+
+    soup = BeautifulSoup(requests.get(temp_link, headers=headers).text, features="html.parser")
+
+        # using html, find the class that includes temperature
+    tempinfo = soup.find('span', class_='wob_t').text
+        # add tempinfo into the weatherinfo list above
+    weatherinfo.append(int(tempinfo))
+
+        # must use attrs when under an ID tag
+    precinfo = soup.find('span', attrs={'id': 'wob_pp'}).text
+    weatherinfo.append(int(precinfo[:-1]))
+
+    humidinfo = soup.find('span', attrs={'id': 'wob_hm'}).text
+    weatherinfo.append(int(humidinfo[:-1]))
+
+    windinfo = soup.find('span', attrs={'id': 'wob_ws'}).text
+    weatherinfo.append(int(windinfo[:-3]))
+
+    return weatherinfo
+
+#GUI Window
+root = Tk()
+root.configure(background="alice blue")
+root.title("Weather Bot")
+root.geometry("500x510")
+
+#Title of Program
+title = Label(root, text="WEATHER BOT")
+title.grid(row=0, column=2)
+title.config(font = ("Courier", 35, "bold"), justify = "center", background="alice blue", foreground="LightSkyBlue3")
+
+#Middle frame organizes results
+middle_frame = Frame(root, width = 300, height = 200, background="alice blue")
+middle_frame.grid(row=5, column =2)
+forecast_title = Label(middle_frame, text="Today's Forecast", font = ("Courier New", 15, "bold"),
+                       background="alice blue", foreground="LightSkyBlue3", pady=10)
+
+#Bottom frame to organize buttons
+bottom_frame = Frame(root, width = 300, height = 300, background="alice blue", highlightbackground="alice blue",
+                     highlightthickness=0)
+bottom_frame.grid(row=7, column=2)
+
+#Variables to be assigned input value
+city = StringVar()
+state = StringVar()
+
+#City Label
+citylabel = Label(root, text="CITY", font = ("Courier New", 16), background="alice blue", foreground="dim gray", padx=5)
+citylabel.grid(row = 1, column = 1)
+
+#City Input
+city_entry = ttk.Entry(root, width = 40, textvariable=city, background="alice blue")
+city_entry.grid(row=1, column = 2)
+
+
+#State Label
+statelabel = Label(root, text="STATE", font = ("Courier New", 16), background="alice blue", foreground="dim gray", padx=5)
+statelabel.grid(row = 2, column = 1)
+
+#State Input
+state_entry = ttk.Entry(root, width = 40, textvariable=state, background="alice blue")
+state_entry.grid(row=2, column = 2)
+
+
+#RESULTS - Establish lines for output
+#line 1: description of current weather for results
+line1 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+# line 2: date and time for results
+line2 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+# line 3: air temperature
+line3 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+# line 4: precipitation %
+line4 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+# line 5: humidity %
+line5 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+# line 6: wind mph
+line6 = Entry(middle_frame, width = 43, background="alice blue", borderwidth=0)
+
+#Quit button command
+def quit():
+    root.destroy()
+
+#Submit button command
+def submit_clicked():
+
+    #Line 1: Description of current condition
+    forecast_title.grid(row=0, column=0)
+    citystr = str(city.get()).title()
+    statestr = str(state.get())
+    weatherdesc = Get_forecast(citystr, statestr)
+
+    #Checks for state input format
+    if len(statestr) == 2:
+        statestr = statestr.upper()
+    else:
+        statestr = statestr.title()
+
+    line_1 = weatherdesc + " in " + citystr + ", " + statestr
+    line1.grid(row=1, column=0) #places the previously created line onto the GUI to display the output
+    line1.insert(0, line_1) #insert the string variable into the line
+    line1.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    #Line 2: Time & day data is retrieved
+    date_time = Get_time(citystr, statestr)
+    line_2 = "Data last retrieved: "+date_time
+    line2.grid(row=2, column=0)
+    line2.insert(0, line_2)
+    line2.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    #Line 3-5: Air temperature, Precipitation, Humidity, and Wind speed
+    weatherlist = Get_temp(citystr, statestr)
+    weather_list = []
+
+    #Conversion necessary for understandable output
+    for i in weatherlist:
+        new_i = str(i)
+        weather_list.append(new_i)
+
+    #Using the values retrieved with Get_temp(), display them line by line
+    temp = "It is currently "+weather_list[0]+" degrees in Fahrenheit."
+    line3.grid(row=3, column=0)
+    line3.insert(0, temp)
+    line3.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    precip = "There is currently a "+weather_list[1]+"% chance of precipitation."
+    line4.grid(row=4, column=0)
+    line4.insert(0, precip)
+    line4.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    humid = "The current humidity ratio is "+weather_list[2]+"%."
+    line5.grid(row=5, column=0)
+    line5.insert(0, humid)
+    line5.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    wind = "The current speed of wind is "+weather_list[3]+" miles per hour."
+    line6.grid(row=6, column=0)
+    line6.insert(0, wind)
+    line6.config(state="readonly", justify="center", highlightbackground="alice blue")
+
+    #Recommendation Buttons only display when input is given
+    clothing_button.grid(row = 1, column = 0)
+    rainGear_button.grid(row=1, column=1)
+    hydration_button.grid(row=1, column=2)
+    wind_button.grid(row = 1, column = 3)
+    clear_button.grid(row = 2, column = 1, pady = 30)
+
+#Submit button
+submit_button = ttk.Button(root, text="Submit", command=submit_clicked).grid(row = 4, column = 2)
+
+#Clear button command
+def clear_clicked():
+    city_entry.delete(0, END)
+    state_entry.delete(0, END)
+
+    line1.config(state="normal")
+    line1.delete(0, END)
+
+    line2.config(state="normal")
+    line2.delete(0, END)
+
+    line3.config(state="normal")
+    line3.delete(0, END)
+
+    line4.config(state="normal")
+    line4.delete(0, END)
+
+    line5.config(state="normal")
+    line5.delete(0, END)
+
+    line6.config(state="normal")
+    line6.delete(0, END)
+
+    forecast_title.grid_remove()
+
+    clothing_button.grid_remove()
+    rainGear_button.grid_remove()
+    hydration_button.grid_remove()
+    wind_button.grid_remove()
+
+#Clothing button command
+def clothing_clicked():
+    citystr1 = str(city.get())
+    statestr1 = str(state.get())
+
+    weatherlist = Get_temp(citystr1, statestr1)
+
+    #clothing recommendations based on air temperature
+    if weatherlist[0] < 15:
+        rec = "Note - It is extremely cold out. Wear layers to stay warm!\n\nClothing Recommendations:\n• " \
+                       "Tops: long sleeves, turtle-necks, sweaters\n• Bottoms: long pants, sweatpants, long skirts\n• " \
+                       "Accessories: hats, gloves, scarves, tights, thermal socks\n• Outerwear: winter " \
+                       "coats/jackets\n• Shoes: boots "
+    elif 15 <= weatherlist[0] <= 30:
+        rec = "Note - It is very cold out. Wear layers to stay warm!\n\nClothing Recommendations:\n• " \
+                       "Tops: long sleeves, turtle-necks, sweaters\n• Bottoms: long pants, sweatpants, long skirts\n• " \
+                       "Accessories: hats, gloves, scarves, tights, thermal socks\n• Outerwear: winter " \
+                       "coats/jackets\n• Shoes: boots "
+    elif 30 <= weatherlist[0] <= 49:
+        rec = "Note - It is cold out. Wear a couple layers to stay warm!\n\nClothing Recommendations:\n• " \
+                       "Tops: long sleeves, turtle-necks, sweaters\n• Bottoms: long pants, jeans, leggings, " \
+                       "sweatpants, long skirts\n• Accessories: hats, gloves, scarves, tights\n• Outerwear: coats, " \
+                       "jackets, sweaters, blazers\n• Shoes: boots, closed-toe shoes "
+    elif 50 <= weatherlist[0] <= 59:
+        rec = "Note - The sun and clouds play a major role in whether it will feel brisk or not. Make sure " \
+                       "to step outside to ensure comfort!\n\nClothing Recommendations:\n• Tops: long sleeves, " \
+                       "turtle-necks, sweaters, dresses\n• Bottoms: long pants, jeans, leggings, sweatpants, " \
+                       "skirts\n• Accessories: hats, scarves, tights\n• Outerwear: coats/jackets, cardigans\n• Shoes: " \
+                       "closed-toe shoes "
+    elif 60 <= weatherlist[0] <= 69:
+        rec = "Note - Most people find this temperature to be comfortable or slightly chilly. Make sure to " \
+                       "step outside to ensure comfort!\n\nClothing Recommendations:\n• Tops: t-shirts, blouses, " \
+                       "long sleeves, dresses\n• Bottoms: pants, jeans, leggings, skirts, " \
+                       "shorts\n• Accessories: hats, sunglasses\n• Outerwear: cardigans, " \
+                       "sweaters\n"
+    elif 70 <= weatherlist[0] <= 79:
+        rec = "Note - It is warm out.\n\nClothing Recommendations:\n• Tops: t-shirts, blouses, dresses, " \
+                       "tank-tops\n• Bottoms: thin pants, jeans, leggings, skirts, shorts\n• Accessories: hats, " \
+                       "sunglasses\n "
+    elif 80 <= weatherlist[0]:
+        rec = "Note - It is extremely warm out.\n\nClothing Recommendations:\n• Tops: t-shirts, blouses, " \
+                       "dresses, tank-tops\n• Bottoms: shorts, skirts\n• Accessories: hats, sunglasses\n• Shoes: " \
+                       "open-toe shoes\n "
+
+    messagebox.showinfo("Clothing Recommendation", rec)
+
+#Rain gear button command
+def rainGear_clicked():
+    warning = "The probability of precipitation (POP) is often misunderstood. The percentage is calculated as follows:\n\n" \
+              "(Probability)*(Areal Coverage)\n\nFor example, this means that while there may be a low POP for a certain city, it could definitely " \
+              "rain some small areas. "
+
+    messagebox.showinfo("Rain Gear", warning)
+
+    citystr = city.get().title()
+    statestr = state.get()
+    weatherlist = Get_temp(citystr, statestr)
+
+    if len(statestr) == 2:
+        statestr = statestr.upper()
+    else:
+        statestr = statestr.title()
+
+    if 0 <= weatherlist[1] <= 5:
+        rec = "There is a " + str(weatherlist[1]) + "% chance of precipitation for any given point in " + citystr + ", " + statestr + ".\n\nRain " \
+                                                                                                                                      "gear is " \
+                                                                                                                                      "unnecessary. "
+    elif 5 < weatherlist[1] < 10:
+        rec = "There is a " + str(weatherlist[1]) + "% chance of precipitation for any given point in " + citystr + ", " + statestr + ".\n\nRain " \
+                                                                                                                                      "gear is not " \
+                                                                                                                                      "necessary, " \
+                                                                                                                                      "but there is " \
+                                                                                                                                      "still a " \
+                                                                                                                                      "possibility " \
+                                                                                                                                      "that it may " \
+                                                                                                                                      "precipitate " \
+                                                                                                                                      "in your area. "
+    elif 10 <= weatherlist[1] <= 20:
+        rec = "There is a "+str(weatherlist[1])+"% chance of precipitation for any given point in "+citystr+", "+statestr+".\n\nYou can take " \
+                                                                                                                          "precaution by either " \
+                                                                                                                          "bringing a pocket " \
+                                                                                                                          "umbrella or wearing " \
+                                                                                                                          "attire with a hood. It " \
+                                                                                                                          "is recommended to step " \
+                                                                                                                          "outside before leaving. "
+    elif 20 < weatherlist[1] < 50:
+        rec = "There is a "+str(weatherlist[1])+"% chance of precipitation for any given point in "+citystr+", "+statestr+".\n\nIt is recommended " \
+                                                                                                                          "that you bring an " \
+                                                                                                                          "umbrella or wear a " \
+                                                                                                                          "raincoat. "
+    elif 50 <= weatherlist[1]:
+        rec = "There is a "+str(weatherlist[1])+"% chance of precipitation for any given point in "+citystr+", "+statestr+".\n\nIt is recommended " \
+                                                                                                                          "that you bring an " \
+                                                                                                                          "umbrella or wear a " \
+                                                                                                                          "raincoat. It is also " \
+                                                                                                                          "recommended that you " \
+                                                                                                                          "wear waterproof shoes. "
+
+    #provide user with recommendation
+    messagebox.showinfo("Rain Gear Recommendation", rec)
+
+
+# Hydration button command --> this is based on the level of relative humidity in the atmosphere - high humidity makes you feel warmer,
+# means fewer clothes. low humidity means you feel colder, means more clothes.
+def hydration_clicked():
+    citystr = city.get().title()
+    statestr = state.get()
+
+    if len(statestr) == 2:
+        statestr = statestr.upper()
+    else:
+        statestr = statestr.title()
+
+    weatherlist = Get_temp(citystr, statestr)
+
+    # weatherlist[2] - Humidity
+    if 0 <= weatherlist[2] <= 39:
+        rec = "Relative Humidity is low. With the currently low levels of humidity, temperatures should be slightly cooler than expected. Dryer " \
+              "weather can also cause you to dehydrate.\n\nBring a water bottle to stay hydrated today. "
+    elif 40 <= weatherlist[2] <= 69:
+        rec = "Relative Humidity is moderate. With the current levels of humidity, temperatures may feel about the same as expected, or slightly " \
+              "warmer. \n\nIf engaging in physical activity or outdoor activity, please bring a few water bottles to stay properly hydrated. "
+    elif 70 <= weatherlist[2]:
+        rec = "Relative Humidity is high. With the current levels of humidity, temperatures may be a few degrees warmer than expected. \n\nIf " \
+              "engaging in physical activity, limit your time outside and consider drinking lots of water in order to stay properly hydrated. "
+
+    messagebox.showinfo("Hydration Recommendation", rec)
+
+
+# wind button commmand
+def wind_clicked():
+    citystr = city.get().title()
+    statestr = state.get()
+    weatherlist = Get_temp(citystr, statestr)
+
+    if len(statestr) == 2:
+        statestr = statestr.upper()
+    else:
+        statestr = statestr.title()
+
+    # weatherlist[3] = Wind speed
+    if 0 <= weatherlist[3] <= 10:
+        rec = "There is a " + str(weatherlist[3]) + "mph wind blowing today. Today's calm winds will not slow you down in " + citystr + ", " + \
+              statestr + ". \n\nThere is no need for special wind-protective gear."
+    elif 11 <= weatherlist[3] <= 24:
+        rec = "There is a mild breeze of " + str(weatherlist[3]) + "mph wind blowing today. \n\nToday's mildly breezy winds will not be a major issue," \
+                                                                   " but please wear a light coat or hoodie to stay warm in " + citystr + ", " + statestr + "."
+    elif 25 <= weatherlist[3] <= 38:
+        rec = "There is a strong wind of " + str(weatherlist[3]) + "mph wind blowing today.\n\nToday's strong winds may be accompanied with cold " \
+                                                                   "weather - bring a heavy coat to stay warm in " + citystr + ", " + statestr + "."
+    elif 39 <= weatherlist[3]:
+        rec = "There are currently gale force winds in " + citystr + ", " + statestr + ". \n\nStay indoors if possible. " \
+                                                                                       "If you must step outside, wear boots and " \
+                                                                                       "layer up with a light coat and a heavy outer coat."
+
+    messagebox.showinfo("Wind Recommendation", rec)
+
+
+#buttons in bottom frame
+clothing_button = ttk.Button(bottom_frame, text="CLOTHING", command = clothing_clicked)
+
+rainGear_button = ttk.Button(bottom_frame, text="RAIN GEAR", command=rainGear_clicked)
+
+hydration_button = ttk.Button(bottom_frame, text="HYDRATION", command=hydration_clicked)
+
+wind_button = ttk.Button(bottom_frame, text="WIND", command=wind_clicked)
+
+clear_button = ttk.Button(bottom_frame, text="Clear", command=clear_clicked)
+
+quit_button = ttk.Button(bottom_frame, text="Quit", command=quit).grid(row = 2, column = 2, pady = 30)
+
+
+#main code
+root.mainloop()
