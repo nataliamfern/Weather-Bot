@@ -1,5 +1,5 @@
 # Weather-Bot
-Weather Bot was born out of a final project for an Introduction to Programming with Python class. The program provides current weather metrics for a specified location and helps you interpret them with recommendations.
+Weather Bot was born out of a final project for an Introduction to Programming with Python class. The program provides current weather metrics for a specified location and helps you interpret them with recommendations. The code takes on a function-based structure due to the discussed class concepts.
 
 Summary:
 Weather is one of the most primal and universal concerns in humanity. It has the power to influence every person’s daily decisions. As a result, it is incredibly important for people to have an accurate, up-to-date weather forecast for them to make well-informed decisions about their plans. 
