@@ -1,6 +1,6 @@
 # Weather-Bot
-Weather Bot was created for an Introduction to Programming with Python class.
-TL;DR Weather Bot provides current weather metrics for a specified location and helps you interpret them with recommendations.
+Weather Bot was born out of a final project for an Introduction to Programming with Python class. The program provides current weather metrics for a specified location and helps you interpret them with recommendations.
+
 Summary:
 Weather is one of the most primal and universal concerns in humanity. It has the power to influence every person’s daily decisions. As a result, it is incredibly important for people to have an accurate, up-to-date weather forecast for them to make well-informed decisions about their plans. 
 To expedite this decision process, we created Weather Bot. Weather Bot is an interactive application that displays the weather forecast based on user input of city and state. Using the collected weather information, the program makes relevant recommendations. 
